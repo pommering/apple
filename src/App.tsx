@@ -8,7 +8,7 @@ import { Product } from './lib/supabase';
 
 function App() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [freight, setFreight] = useState<number>(window.localStorage.getItem("frete") ? Number(window.localStorage.getItem("frete")) : 0);
@@ -21,7 +21,6 @@ function App() {
 
   const loadProducts = async () => {
     try {
-      setIsLoading(true);
 
       const storedProducts = window.localStorage.getItem("apple");
       const initialProducts = storedProducts ? JSON.parse(storedProducts) : [] as Product[];
@@ -30,13 +29,12 @@ function App() {
     } catch (err) {
       console.error('Error loading products:', err);
       setError('Erro ao carregar produtos');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   async function extractJsonFromMessage(message: string): Promise<{ name: string; price: number }[]> {
     const API_KEY = apiKeyGemini;
+
     try {
       const response = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
@@ -65,6 +63,7 @@ function App() {
 
       // remove ```json e ```
       text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+
 
       return JSON.parse(text);
     } catch (err) {
@@ -109,7 +108,14 @@ ${formatar(airpods)}
     try {
       setError(null);
       setSuccessMessage(null);
+
+      if (!apiKeyGemini) {
+        setError('Por favor, insira sua chave de API Gemini para processar o texto.');
+        return;
+      }
+
       setIsLoading(true);
+
 
       extractJsonFromMessage(text).then(async (items) => {
         if (items.length === 0) {
@@ -117,8 +123,8 @@ ${formatar(airpods)}
           return;
         }
 
-        const newProducts: Product[] = items.map(item => ({
-          id: crypto.randomUUID(),
+        const newProducts: Product[] = items.map((item, key) => ({
+          id: key.toString(),
           name: item.name,
           cost_price: item.price,
           margin_percentage: marginPercentage,
@@ -129,13 +135,11 @@ ${formatar(airpods)}
         }));
 
 
-
-
         setSuccessMessage(`${newProducts.length} produtos adicionados com sucesso!`);
         setProducts(newProducts);
         window.localStorage.setItem("apple", JSON.stringify(newProducts));
+        console.log(newProducts);
         setIsLoading(false);
-
       });
 
       /*const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-prices-ai`;
@@ -155,9 +159,12 @@ ${formatar(airpods)}
       }
 
       setSuccessMessage(result.message);*/
-      await loadProducts();
+      //await loadProducts();
 
-      setTimeout(() => setSuccessMessage(null), 5000);
+      setTimeout(() => {
+        setSuccessMessage(null)
+        
+      }, 5000);
     } catch (err) {
       console.error('Error processing text:', err);
       setError(err instanceof Error ? err.message : 'Erro ao processar texto');
@@ -234,7 +241,7 @@ ${formatar(airpods)}
                 Sua chave é armazenada localmente no navegador e não é enviada a nenhum servidor.
               </p>
             </div>
-            <AITextInput onProcessText={handleProcessText}  />
+            <AITextInput onProcessText={handleProcessText} />
 
             <div className="bg-white rounded-lg shadow-lg p-6" style={{ marginTop: '20px' }}>
               <h3 className="text-lg font-semibold mb-4">Valor Frete</h3>
