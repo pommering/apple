@@ -109,6 +109,7 @@ ${formatar(airpods)}
     try {
       setError(null);
       setSuccessMessage(null);
+      setIsLoading(true);
 
       extractJsonFromMessage(text).then(async (items) => {
         if (items.length === 0) {
@@ -133,6 +134,7 @@ ${formatar(airpods)}
         setSuccessMessage(`${newProducts.length} produtos adicionados com sucesso!`);
         setProducts(newProducts);
         window.localStorage.setItem("apple", JSON.stringify(newProducts));
+        setIsLoading(false);
 
       });
 
