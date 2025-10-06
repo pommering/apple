@@ -13,7 +13,7 @@ function App() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [freight, setFreight] = useState<number>(window.localStorage.getItem("frete") ? Number(window.localStorage.getItem("frete")) : 0);
   const [marginPercentage, setMarginPercentage] = useState<number>(window.localStorage.getItem("margem") ? Number(window.localStorage.getItem("margem")) : 20);
-  const [apiKeyGemini, setApiKeyGemini] = useState<string>("");
+  const [apiKeyGemini, setApiKeyGemini] = useState<string>(window.localStorage.getItem("apiKeyGemini") || '');
 
   useEffect(() => {
     loadProducts();
@@ -129,7 +129,7 @@ ${formatar(airpods)}
           cost_price: item.price,
           margin_percentage: marginPercentage,
           freight: freight,
-          category: 'Desconhecida',
+          //category: 'Desconhecida',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }));
@@ -163,7 +163,7 @@ ${formatar(airpods)}
 
       setTimeout(() => {
         setSuccessMessage(null)
-        
+
       }, 5000);
     } catch (err) {
       console.error('Error processing text:', err);
@@ -233,7 +233,9 @@ ${formatar(airpods)}
               <input
                 type="text"
                 value={apiKeyGemini}
-                onChange={(e) => setApiKeyGemini(e.target.value)}
+                onChange={(e) => {
+                  setApiKeyGemini(e.target.value)
+                  window.localStorage.setItem("apiKeyGemini", e.target.value);}}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Insira sua chave de API aqui"
               />
